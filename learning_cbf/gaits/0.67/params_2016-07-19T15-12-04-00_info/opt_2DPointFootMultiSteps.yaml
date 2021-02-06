@@ -1,0 +1,189 @@
+# specifiy optimization options here
+options:
+- IntegrationScheme: 'PseudoSpectral' #{'Hermite-Simpson'},'Trapezoidal'
+  TimeBased: false
+  OpenLoopController: false
+  NodeDistribution: 'LGL' #{'CGL'}, 'Uniform', 'Variable'
+  ObjectiveType: 'scot' #{'work'}, 'zero', 'scot'
+  use1StepX0Xf: false
+  HumanDataConstraints: false
+  ZMPConstraints: false
+  ep: 10
+  ZeroRD1Error: false
+  ExportUpdatedParameters: false
+  UseLIPMConstraints: false
+
+
+model: 'amber3_model.yaml'
+
+
+domains:
+- name: 1StartDS
+  numNodes: 4
+  Active: false
+  constraints:
+    torPos:
+    - min: -0.1
+      max: 0.02
+  target_q0:
+  target_dq0: [0,0,0, 0,0,0, 0]
+  target_qf:
+  target_dqf:
+  transition:
+  - isPeriodic: false
+    relabel: false
+    impact: false
+    constraints:
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.1
+    maxStepLength: 0.4
+    minTimeInterval: 0.1
+    maxTimeInterval: 1.5
+    minParamPhaseVar: [-0.2,   -0.3]
+    maxParamPhaseVar: [-0.05,  -0.08]
+####################################################
+- name: 2StartSS
+  numNodes: 6
+  Active: false
+  constraints:
+    FootClearanceTau:
+    - a:  0.3
+      ep: 1.8
+      hmax: 0.02
+      h0: 0
+      point: ['NonstanceFoot']
+    FootClearanceMax:
+    - h0: 0.025
+      point: ['NonstanceFoot']
+      node: 4
+    torPos:
+    - min: -0.1
+      max: 0.01
+    hipVelocity:
+    - min: 0.001
+      max: 0.7
+#      node: 1
+#    angularMomentum:
+#    - min: 0.58
+#      max: 1.0
+    impactVelocity2D:
+    - min: [-0.8,  -0.6]
+      max: [ 0.8,  -0.01]
+  target_q0:
+  target_dq0:
+  target_qf:  [0.0, 0.0, -0.43673100547665744, 0.5314730322419906, -0.1315515682996163,
+    -0.5121783036474138, 0.5253687609410408]
+  target_dqf: [0.0, 0.0, -1.4239932172751497, 1.5117358475335625,
+    -1.1666070409460876, -0.27755983220634484, -1.9209025386991667]
+  transition:
+  - isPeriodic: false
+    relabel: true
+    impact: true
+    constraints:
+    - 'NonstanceFootPosX'
+    - 'NonstanceFootPosZ'
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.1
+    maxStepLength: 0.5
+    minTimeInterval: 0.2
+    maxTimeInterval: 2.0
+    minParamPhaseVar: [0.14,   -0.2]
+    maxParamPhaseVar: [0.18,    0.06]
+###################################################
+- name: 3SS
+  numNodes: 6
+  Active: true
+  constraints:
+    FootClearance:
+    - a:  0.5
+      ep: 0.7
+      hmax: 0.09
+      h0: 0
+      point: ['NonstanceFoot']
+    FootClearanceMax:
+    - h0: 0.025
+      point: ['NonstanceFoot']
+      node: 5
+    torPos:
+    - min: -0.1
+      max: 0.01
+    hipVelocity:
+    - min: 0.15
+      max: 0.8
+#    angularMomentum:
+#    - min: 0.58
+#      max: 1.0
+    mbc:
+    - Z0: 0.86
+      shift: 0.2
+    impactVelocity2D:
+    - min: [-0.8,  -0.6]
+      max: [ 0.8,  -0.01]
+  target_q0:
+  target_dq0:
+  target_qf: 
+  target_dqf:
+  transition:
+  - isPeriodic: true
+    relabel: true
+    impact: true
+    constraints:
+    - 'NonstanceFootPosX'
+    - 'NonstanceFootPosZ'
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.25
+    maxStepLength: 0.36
+    minTimeInterval: 0.3
+    maxTimeInterval: 1.5
+    minParamPhaseVar: [0.01,  -0.25]
+    maxParamPhaseVar: [0.25,  -0.01]
+    minBaseRotY0: -0.05
+    maxBaseRotY0: 0.1
+
+
+
+# value limits of optimization variables or constraints
+commonBoundaries:
+  - minBaseDofPos: [0.0,  0.0, -0.8] 
+    maxBaseDofPos: [0.0, 0.0,   0.8]
+    minBaseDofVel: [0.0, 0.0, -5]
+    maxBaseDofVel: [0.0, 0.0,  5]
+    minJointAccel: -1000
+    maxJointAccel:  1000
+    minConstrForces: -5000
+    maxConstrForces:  5000
+    minStepWidth: 0.0
+    maxStepWidth: 0.0
+    minParamRD2: -1000
+    maxParamRD2:  1000
+
+
+
+export:
+export:
+- behavior: '3SS'
+  domains:
+  - target: 1StartDS
+    source: 1StartDS
+    swapFoot: false
+    swapOutputIndices: []
+  - target: 2StartSS
+    source: 2StartSS
+    swapFoot: false
+    swapOutputIndices: []
+  - target: 3SS
+    source: 3SS
+    swapFoot: false
+    swapOutputIndices: []

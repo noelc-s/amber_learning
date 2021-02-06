@@ -1,0 +1,213 @@
+# specifiy optimization options here
+options:
+- IntegrationScheme: 'PseudoSpectral' #{'Hermite-Simpson'},'Trapezoidal'
+  TimeBased: false
+  OpenLoopController: false
+  NodeDistribution: 'LGL' #{'CGL'}, 'Uniform', 'Variable'
+  ObjectiveType: 'scot' #{'work'}, 'zero', 'scot'
+  use1StepX0Xf: false
+  HumanDataConstraints: false
+  ZMPConstraints: false
+  ep: 10
+  ZeroRD1Error: false
+  ExportUpdatedParameters: false
+  UseLIPMConstraints: false
+
+
+model: 'amber3_PF_model.yaml'
+
+
+domains:
+- name: StartDS
+  numNodes: 6
+  Active: false
+  constraints:
+    torPos:
+    - min: -0.2
+      max: 0.1
+    hipVelocity:
+    - min: 0.1
+      max: 0.6
+      node: [3,4,5,6]
+  target_q0: 
+  target_dq0: 
+  target_qf: [0.0, 0.0, -0.40099998678350735, 0.9048096480634766, -0.464963161245325,
+    -0.14906361175206043, 0.7838184320249888]
+  target_dqf: [0.0, 0.0, 1.5234401989139374, -4.233621973317533,
+    2.3862737759120187, -1.85463282423151, 0.2059077844617333]
+  transition:
+  - isPeriodic: false
+    relabel: false
+    impact: false
+    constraints:
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.18
+    maxStepLength: 0.22
+    minParamRD1: 0.29
+    maxParamRD1: 0.32
+    minTimeInterval: 0.02
+    maxTimeInterval: 1.9
+    minParamPhaseVar: [-0.1,  -0.2]
+    maxParamPhaseVar: [-0.0,  -0.05]
+    minBaseRotY0: -0.1
+    maxBaseRotY0: 1
+####################################################
+- name: StartSS
+  numNodes: 6
+  Active: false
+  constraints:
+    FootClearanceTau:
+    - a:  0.3
+      ep: 1.8
+      hmax: 0.02
+      h0: 0
+      point: ['NonstanceFoot']
+#    FootClearanceMax:
+#    - h0: 0.025
+#      point: ['NonstanceFoot']
+#      node: 4
+    torPos:
+    - min: -0.1
+      max: 0.1
+    hipVelocity:
+    - min: 0.01
+      max: 0.31
+      node: 1
+    NSFX:
+    - min: -0.4
+      max: -0.2
+      node: 1
+#    angularMomentum:
+#    - min: 0.58
+#      max: 1.0
+#    impactVelocity2D:
+#    - min: [-0.9,  -0.6]
+#      max: [ 0.9,  -0.01]
+  target_q0:
+  target_dq0:
+  target_qf:  [0.0, 0.0, -0.3201637047550716, 0.4139857255934623, -0.1420051849164858,
+    -0.4044663081250779, 0.35727563223137937]
+  target_dqf: [0.0, 0.0, -0.6567505322379462, 0.3898052138509667,
+    -0.8293762587052735, 0.8752833371789741, -2.6589212970146594]
+  transition:
+  - isPeriodic: false
+    relabel: true
+    impact: true
+    constraints:
+    - 'NonstanceFootPosX'
+    - 'NonstanceFootPosZ'
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.2
+    maxStepLength: 0.2
+    minTimeInterval: 0.1
+    maxTimeInterval: 1.2
+    minParamPhaseVar: [0.1,    -0.2]
+    maxParamPhaseVar: [0.13,    0.01]
+###################################################
+- name: SS
+  numNodes: 6
+  Active: true
+  constraints:
+    FootClearance:
+    - a:  0.5
+      ep: 0.7
+      hmax: 0.09
+      h0: 0
+      point: ['NonstanceFoot']
+    FootClearanceMax:
+    - h0: 0.025
+      point: ['NonstanceFoot']
+      node: 5
+    torPos:
+    - min: -0.11
+      max:  0.01
+    averageVel:
+    - min: 0.9
+      max: 0.95
+    hipHeight:
+    - min: 0.80
+      max: 1.5
+#    hipVelocity:
+#    - min: 0.15
+#      max: 0.65
+#    angularMomentum:
+#    - min: 0.58
+#      max: 1.0
+#    mbc:
+#    - Z0: 0.86
+#      shift: 0.22
+#    stability:
+#    - min: -0.99
+#      max: -0
+    impactVelocity2D:
+    - min: [-0.8,  -0.6]
+      max: [ 0.8,  -0.01]
+  target_q0:
+  target_dq0:
+  target_qf: 
+  target_dqf:
+  transition:
+  - isPeriodic: true
+    relabel: true
+    impact: true
+    constraints:
+    - 'NonstanceFootPosX'
+    - 'NonstanceFootPosZ'
+  options:
+  - sameA: false #same a matrix as next domain.
+    samePH: false #same p,h as the next domain.
+    sameV: false #same v as next domain
+  domainBoundary:
+  - minStepLength: 0.29
+    maxStepLength: 0.36
+    minTimeInterval: 0.3
+    maxTimeInterval: 1.5
+    minParamPhaseVar: [0.01,  -0.25]
+    maxParamPhaseVar: [0.25,  -0.01]
+    minSpecialVar: [-0.07, 1, 3]
+    maxSpecialVar: [ 0.03, 1, 3]
+
+
+
+
+# value limits of optimization variables or constraints
+commonBoundaries:
+  - minBaseDofPos: [0.0,  0.0, -0.9] 
+    maxBaseDofPos: [0.0, 0.0,   0.9]
+    minBaseDofVel: [0.0, 0.0, -5]
+    maxBaseDofVel: [0.0, 0.0,  5]
+    minJointAccel: -1000
+    maxJointAccel:  1000
+    minConstrForces: -5000
+    maxConstrForces:  5000
+    minStepWidth: 0.0
+    maxStepWidth: 0.0
+    minParamRD2: -1000
+    maxParamRD2:  1000
+
+
+
+export:
+export:
+- behavior: 'ICRA'
+  domains:
+  - target: StartDS
+    source: StartDS
+    swapFoot: false
+    swapOutputIndices: []
+  - target: StartSS
+    source: StartSS
+    swapFoot: false
+    swapOutputIndices: []
+  - target: SS
+    source: SS
+    swapFoot: false
+    swapOutputIndices: []
